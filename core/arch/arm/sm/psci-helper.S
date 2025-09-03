@@ -8,6 +8,32 @@
 #include <asm.S>
 #include <kernel/cache_helpers.h>
 
+    .global psci_enable_smp_ca32
+    .global psci_disable_smp_ca32
+
+
+SMPEN_MASK_CA32   = 0x40  // 1 << 6
+
+FUNC psci_enable_smp_ca32, :
+    mrrc    p15, 1, r0, r1, c15
+    orr     r0, r0, #SMPEN_MASK_CA32
+    mcrr    p15, 1, r0, r1, c15
+
+    isb
+
+    bx      lr
+END_FUNC psci_enable_smp_ca32
+
+FUNC psci_disable_smp_ca32, :
+    mrrc    p15, 1, r0, r1, c15
+    bic     r0, r0, #SMPEN_MASK_CA32
+    mcrr    p15, 1, r0, r1, c15
+
+    isb
+
+    bx      lr
+END_FUNC psci_disable_smp_ca32
+
 FUNC psci_disable_smp, :
 	read_actlr r0
 	bic	r0, r0, #ACTLR_SMP
@@ -43,7 +69,7 @@ UNWIND(	.save	{r12, lr})
 
 	clrex
 
-	bl	psci_disable_smp
+	bl	psci_disable_smp_ca32
 
 	pop	{r12, pc}
 END_FUNC psci_armv7_cpu_off

@@ -312,6 +312,9 @@ void main_secondary_init_gic(void)
 {
 	gic_cpu_init(&gic_data);
 	rtk_register_online_cpu();
+
+	extern void psci_enable_smp_ca32(void);
+	psci_enable_smp_ca32();
 }
 #endif
 
