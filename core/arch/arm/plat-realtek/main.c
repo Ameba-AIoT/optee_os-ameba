@@ -72,6 +72,7 @@
 #define REG_HSYS_HP_PWC					0x0000
 #define REG_HSYS_HP_ISO					0x0004
 #define CA32_C0_RST_CTRL				0x4
+#define CA32_C0_CPU_STATUS				0x8
 #define CA32_NCOREPORESET(x)			((uint32_t)(((x) & 0x00000003) << 0))
 #define CA32_NCORERESET(x)				((uint32_t)(((x) & 0x00000003) << 4))
 #define HSYS_ISO_HP_AP_CORE(x)			((uint32_t)(((x) & 0x00000003) << 4))
@@ -80,7 +81,7 @@
 #define CA32_BIT_NRESETSOCDBG			((uint32_t)0x00000001 << 8)
 #define CA32_BIT_NL2RESET				((uint32_t)0x00000001 << 24)
 #define CA32_BIT_NGICRESET				((uint32_t)0x00000001 << 12)
-#define CA32_BIT_NGICRESET				((uint32_t)0x00000001 << 12)
+#define CA32_STANDBYWFI_CORE1			((uint32_t)0x00000001 << 9)
 
 #define REG_LSYS_BOOT_REASON_SW			0x0264
 #define REG_LSYS_SW_RST_CTRL			0x0238
@@ -203,8 +204,21 @@ static inline void arm_arch_timer_enable(unsigned char enable)
 static void rtk_cpu1_power_down(void)
 {
 	uint32_t val;
+	int cnt = 10000;
 
 	//DMSG("rtk_cpu1_power_down\n");
+
+	/* wait for cpu1 enter wfi state for 10000us*/
+	do {
+		if ((io_read32((vaddr_t)phys_to_virt_io(CA32_BASE + CA32_C0_CPU_STATUS)) & CA32_STANDBYWFI_CORE1)) {
+			break;
+		}
+		udelay(1);
+		if(cnt-- <= 0){
+			EMSG("cpu1 enter wfi state timeout!!! \n");
+			break;
+		}
+	} while(cnt > 0);
 
 	val =  io_read32((vaddr_t)phys_to_virt_io(SYSTEM_HP + REG_HSYS_HP_ISO));
 	val |= (HSYS_ISO_HP_AP_CORE(0x2));
