@@ -622,7 +622,7 @@ TEE_Result tee_otp_get_hw_unique_key(struct tee_hw_unique_key *hwkey)
 {
 	vaddr_t sram_base = (vaddr_t)phys_to_virt(SYSTEM_HP_SRAM, MEM_AREA_RAM_SEC);
 
-	void *derived_key = sram_base + BOOT_ROM_DERIVED_KEY;
+	void *derived_key = (void *)(sram_base + BOOT_ROM_DERIVED_KEY);
 	memcpy(&hwkey->data[0], derived_key, sizeof(hwkey->data));
 
 	return TEE_SUCCESS;
